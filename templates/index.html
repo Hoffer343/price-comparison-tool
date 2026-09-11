@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛒 电商比价工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .results {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .result-item {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+        }
+
+        .product-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .price-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .price-card {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .platform-name {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-size: 1.8em;
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .price-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .recommend {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin-top: 15px;
+        }
+
+        .recommend-title {
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #e74c3c;
+            padding: 15px;
+            background: #fadbd8;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            color: #27ae60;
+            padding: 15px;
+            background: #d5f4e6;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛒 电商比价工具</h1>
+            <p class="subtitle">在淘宝、京东、拼多多一键比价</p>
+        </header>
+
+        <div class="search-box">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('single')">单个搜索</button>
+                <button class="tab-btn" onclick="switchTab('batch')">批量搜索</button>
+            </div>
+
+            <!-- 单个搜索 -->
+            <div id="single" class="tab-content active">
+                <div class="search-input-group">
+                    <input type="text" id="keyword" placeholder="输入商品名称（如：iPhone 15、AirPods Pro）">
+                    <button onclick="searchSingle()">搜索</button>
+                </div>
+            </div>
+
+            <!-- 批量搜索 -->
+            <div id="batch" class="tab-content">
+                <textarea id="keywords" placeholder="每行输入一个商品名称\niPhone 15\nAirPods Pro\n小米 13"></textarea>
+                <button onclick="searchBatch()" style="margin-top: 10px; width: 100%;">批量搜索</button>
+            </div>
+        </div>
+
+        <div class="results" id="results" style="display: none;">
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // 隐藏所有标签页
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            // 移除所有按钮的活动状态
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+            // 显示选中的标签页
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function showResults() {
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function showLoading() {
+            const html = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>搜索中...</p>
+                </div>
+            `;
+            document.getElementById('result-content').innerHTML = html;
+            showResults();
+        }
+
+        function searchSingle() {
+            const keyword = document.getElementById('keyword').value.trim();
+            if (!keyword) {
+                alert('请输入商品名称');
+                return;
+            }
+
+            showLoading();
+
+            fetch('/api/search', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({keyword})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                displayResults([data.comparison]);
+            })
+            .catch(err => showError(err.message));
+        }
+
+        function searchBatch() {
+            const keywords = document.getElementById('keywords').value
+                .split('\n')
+                .map(k => k.trim())
+                .filter(k => k);
+            
+            if (keywords.length === 0) {
+                alert('请输入至少一个商品名称');
+                return;
+            }
+
+            showLoading();
+
+            fetch('/api/batch', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({keywords})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                displayResults(data.results);
+            })
+            .catch(err => showError(err.message));
+        }
+
+        function displayResults(comparisons) {
+            let html = '';
+            
+            comparisons.forEach(comp => {
+                html += `<div class="result-item">`;
+                html += `<div class="product-title">${comp.keyword}</div>`;
+                html += `<div class="price-comparison">`;
+
+                Object.entries(comp.platforms || {}).forEach(([platform, product]) => {
+                    html += `
+                        <div class="price-card">
+                            <div class="platform-name">${platform}</div>
+                            <div class="price">${product.price || '无价格'}</div>
+                            <div class="price-info">
+                                <p>销量: ${product.sales || '暂无'}</p>
+                                <p>评分: ${product.rating || '暂无'}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+
+                if (comp.cheapest) {
+                    html += `
+                        <div class="recommend">
+                            <div class="recommend-title">💡 推荐购买</div>
+                            <p>${comp.cheapest.platform} - ${comp.cheapest.product.price}</p>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+            });
+
+            document.getElementById('result-content').innerHTML = html;
+            showResults();
+        }
+
+        function showError(message) {
+            document.getElementById('result-content').innerHTML = `<div class="error">❌ ${message}</div>`;
+            showResults();
+        }
+
+        // 回车搜索
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('keyword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchSingle();
+            });
+        });
+    </script>
+</body>
+</html>
